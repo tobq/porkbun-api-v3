@@ -110,6 +110,7 @@ paths:
     post:
       summary: Check default domain pricing information for all supported TLDs.
       description: Returns default pricing information for domain registration, renewal, and transfer.
+      operationId: getPricing
       responses:
         '200':
           description: Successful response.
@@ -121,6 +122,7 @@ paths:
     post:
       summary: Test communication with the API.
       description: Use this endpoint to test communication with the API and retrieve your IP address.
+      operationId: ping
       requestBody:
         required: true
         content:
@@ -143,6 +145,7 @@ paths:
   /domain/updateNs/{domain}:
     post:
       summary: Update the name servers for your domain.
+      operationId: updateNameServers
       parameters:
         - in: path
           name: domain
@@ -176,6 +179,7 @@ paths:
   /domain/getNs/{domain}:
     post:
       summary: Get the authoritative name servers for your domain.
+      operationId: getNameServers
       parameters:
         - in: path
           name: domain
@@ -208,6 +212,7 @@ paths:
     post:
       summary: Get all domain names in the account.
       description: Domains are returned in chunks of 1000.
+      operationId: listAllDomains
       requestBody:
         required: true
         content:
@@ -240,6 +245,7 @@ paths:
   /domain/addUrlForward/{domain}:
     post:
       summary: Add URL forward for a domain.
+      operationId: addUrlForward
       parameters:
         - in: path
           name: domain
@@ -295,6 +301,7 @@ paths:
   /domain/getUrlForwarding/{domain}:
     post:
       summary: Get URL forwarding for a domain.
+      operationId: getUrlForwarding
       parameters:
         - in: path
           name: domain
@@ -325,6 +332,7 @@ paths:
   /domain/deleteUrlForward/{domain}/{id}:
     post:
       summary: Delete a URL forward for a domain.
+      operationId: deleteUrlForward
       parameters:
         - in: path
           name: domain
@@ -354,6 +362,7 @@ paths:
   /dns/create/{domain}:
     post:
       summary: Create a DNS record.
+      operationId: createDNSRecord
       parameters:
         - in: path
           name: domain
@@ -417,6 +426,7 @@ paths:
   /dns/edit/{domain}/{id}:
     post:
       summary: Edit a DNS record by domain and ID.
+      operationId: editDNSRecordById
       parameters:
         - in: path
           name: domain
@@ -480,6 +490,7 @@ paths:
   /dns/editByNameType/{domain}/{type}/{subdomain}:
     post:
       summary: Edit DNS records by domain, subdomain, and type.
+      operationId: editDNSRecordsByNameType
       parameters:
         - in: path
           name: domain
@@ -529,6 +540,7 @@ paths:
   /dns/delete/{domain}/{id}:
     post:
       summary: Delete a specific DNS record.
+      operationId: deleteDNSRecordById
       parameters:
         - in: path
           name: domain
@@ -558,6 +570,7 @@ paths:
   /dns/deleteByNameType/{domain}/{type}/{subdomain}:
     post:
       summary: Delete DNS records by domain, subdomain, and type.
+      operationId: deleteDNSRecordsByNameType
       parameters:
         - in: path
           name: domain
@@ -593,6 +606,7 @@ paths:
   /dns/retrieve/{domain}:
     post:
       summary: Retrieve all editable DNS records associated with a domain.
+      operationId: retrieveDNSRecords
       parameters:
         - in: path
           name: domain
@@ -623,6 +637,7 @@ paths:
   /dns/retrieve/{domain}/{id}:
     post:
       summary: Retrieve a specific DNS record by domain and ID.
+      operationId: retrieveDNSRecordById
       parameters:
         - in: path
           name: domain
@@ -659,6 +674,7 @@ paths:
   /dns/retrieveByNameType/{domain}/{type}/{subdomain}:
     post:
       summary: Retrieve DNS records by domain, subdomain, and type.
+      operationId: retrieveDNSRecordsByNameType
       parameters:
         - in: path
           name: domain
@@ -701,6 +717,7 @@ paths:
   /ssl/retrieve/{domain}:
     post:
       summary: Retrieve the SSL certificate bundle for the domain.
+      operationId: retrieveSSLCertificate
       parameters:
         - in: path
           name: domain
