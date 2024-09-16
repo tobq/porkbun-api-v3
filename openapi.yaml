@@ -1,0 +1,735 @@
+openapi: '3.0.0'
+info:
+  title: Porkbun API
+  version: '3.0-beta'
+  description: The Porkbun API allows programmatic access to Porkbun's domain management services.
+servers:
+  - url: https://api.porkbun.com/api/json/v3
+components:
+  schemas:
+    Authentication:
+      type: object
+      required:
+        - secretapikey
+        - apikey
+      properties:
+        secretapikey:
+          type: string
+          description: Your secret API key.
+        apikey:
+          type: string
+          description: Your API key.
+    StatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: A status indicating whether or not the command was successfully processed.
+    PricingResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        pricing:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              registration:
+                type: string
+              renewal:
+                type: string
+              transfer:
+                type: string
+    Domain:
+      type: object
+      properties:
+        domain:
+          type: string
+        status:
+          type: string
+        tld:
+          type: string
+        createDate:
+          type: string
+        expireDate:
+          type: string
+        securityLock:
+          type: string
+        whoisPrivacy:
+          type: string
+        autoRenew:
+          type: integer
+        notLocal:
+          type: integer
+        labels:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              title:
+                type: string
+              color:
+                type: string
+    DNSRecord:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        content:
+          type: string
+        ttl:
+          type: string
+        prio:
+          type: string
+        notes:
+          type: string
+    URLForward:
+      type: object
+      properties:
+        id:
+          type: string
+        subdomain:
+          type: string
+        location:
+          type: string
+        type:
+          type: string
+        includePath:
+          type: string
+        wildcard:
+          type: string
+paths:
+  /pricing/get:
+    post:
+      summary: Check default domain pricing information for all supported TLDs.
+      description: Returns default pricing information for domain registration, renewal, and transfer.
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PricingResponse'
+  /ping:
+    post:
+      summary: Test communication with the API.
+      description: Use this endpoint to test communication with the API and retrieve your IP address.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Authentication'
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  yourIp:
+                    type: string
+                    description: Your IP address.
+  /domain/updateNs/{domain}:
+    post:
+      summary: Update the name servers for your domain.
+      parameters:
+        - in: path
+          name: domain
+          required: true
+          schema:
+            type: string
+          description: The domain name.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/Authentication'
+                - type: object
+                  required:
+                    - ns
+                  properties:
+                    ns:
+                      type: array
+                      items:
+                        type: string
+                      description: An array of name servers.
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+  /domain/getNs/{domain}:
+    post:
+      summary: Get the authoritative name servers for your domain.
+      parameters:
+        - in: path
+          name: domain
+          required: true
+          schema:
+            type: string
+          description: The domain name.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Authentication'
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  ns:
+                    type: array
+                    items:
+                      type: string
+                    description: An array of name server host names.
+  /domain/listAll:
+    post:
+      summary: Get all domain names in the account.
+      description: Domains are returned in chunks of 1000.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/Authentication'
+                - type: object
+                  properties:
+                    start:
+                      type: integer
+                      description: An index to start at when retrieving the domains, defaults to 0.
+                    includeLabels:
+                      type: string
+                      description: If set to "yes", label information for the domains will be returned.
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  domains:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Domain'
+  /domain/addUrlForward/{domain}:
+    post:
+      summary: Add URL forward for a domain.
+      parameters:
+        - in: path
+          name: domain
+          required: true
+          schema:
+            type: string
+          description: The domain name.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/Authentication'
+                - type: object
+                  required:
+                    - location
+                    - type
+                    - includePath
+                    - wildcard
+                  properties:
+                    subdomain:
+                      type: string
+                      description: Subdomain to add URL forwarding for. Leave blank to forward the root domain.
+                    location:
+                      type: string
+                      description: The destination URL.
+                    type:
+                      type: string
+                      enum:
+                        - temporary
+                        - permanent
+                      description: The type of forward.
+                    includePath:
+                      type: string
+                      enum:
+                        - yes
+                        - no
+                      description: Whether to include the URI path in the redirection.
+                    wildcard:
+                      type: string
+                      enum:
+                        - yes
+                        - no
+                      description: Also forward all subdomains of the domain.
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+  /domain/getUrlForwarding/{domain}:
+    post:
+      summary: Get URL forwarding for a domain.
+      parameters:
+        - in: path
+          name: domain
+          required: true
+          schema:
+            type: string
+          description: The domain name.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Authentication'
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  forwards:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/URLForward'
+  /domain/deleteUrlForward/{domain}/{id}:
+    post:
+      summary: Delete a URL forward for a domain.
+      parameters:
+        - in: path
+          name: domain
+          required: true
+          schema:
+            type: string
+          description: The domain name.
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The record ID to delete.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Authentication'
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+  /dns/create/{domain}:
+    post:
+      summary: Create a DNS record.
+      parameters:
+        - in: path
+          name: domain
+          required: true
+          schema:
+            type: string
+          description: The domain name.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/Authentication'
+                - type: object
+                  required:
+                    - type
+                    - content
+                  properties:
+                    name:
+                      type: string
+                      description: Subdomain for the record. Leave blank for root domain. Use '*' for wildcard.
+                    type:
+                      type: string
+                      enum:
+                        - A
+                        - MX
+                        - CNAME
+                        - ALIAS
+                        - TXT
+                        - NS
+                        - AAAA
+                        - SRV
+                        - TLSA
+                        - CAA
+                        - HTTPS
+                        - SVCB
+                      description: The type of DNS record.
+                    content:
+                      type: string
+                      description: The content of the DNS record.
+                    ttl:
+                      type: string
+                      description: Time to live in seconds. Minimum and default is 600.
+                    prio:
+                      type: string
+                      description: Priority of the record (for types that support it).
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  id:
+                    type: string
+                    description: The ID of the record created.
+  /dns/edit/{domain}/{id}:
+    post:
+      summary: Edit a DNS record by domain and ID.
+      parameters:
+        - in: path
+          name: domain
+          required: true
+          schema:
+            type: string
+          description: The domain name.
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The record ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/Authentication'
+                - type: object
+                  required:
+                    - type
+                    - content
+                  properties:
+                    name:
+                      type: string
+                      description: Subdomain for the record.
+                    type:
+                      type: string
+                      enum:
+                        - A
+                        - MX
+                        - CNAME
+                        - ALIAS
+                        - TXT
+                        - NS
+                        - AAAA
+                        - SRV
+                        - TLSA
+                        - CAA
+                        - HTTPS
+                        - SVCB
+                      description: The type of DNS record.
+                    content:
+                      type: string
+                      description: The content of the DNS record.
+                    ttl:
+                      type: string
+                      description: Time to live in seconds.
+                    prio:
+                      type: string
+                      description: Priority of the record.
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+  /dns/editByNameType/{domain}/{type}/{subdomain}:
+    post:
+      summary: Edit DNS records by domain, subdomain, and type.
+      parameters:
+        - in: path
+          name: domain
+          required: true
+          schema:
+            type: string
+          description: The domain name.
+        - in: path
+          name: type
+          required: true
+          schema:
+            type: string
+          description: The record type.
+        - in: path
+          name: subdomain
+          required: false
+          schema:
+            type: string
+          description: The subdomain.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/Authentication'
+                - type: object
+                  required:
+                    - content
+                  properties:
+                    content:
+                      type: string
+                      description: The content of the DNS record.
+                    ttl:
+                      type: string
+                      description: Time to live in seconds.
+                    prio:
+                      type: string
+                      description: Priority of the record.
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+  /dns/delete/{domain}/{id}:
+    post:
+      summary: Delete a specific DNS record.
+      parameters:
+        - in: path
+          name: domain
+          required: true
+          schema:
+            type: string
+          description: The domain name.
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The record ID to delete.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Authentication'
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+  /dns/deleteByNameType/{domain}/{type}/{subdomain}:
+    post:
+      summary: Delete DNS records by domain, subdomain, and type.
+      parameters:
+        - in: path
+          name: domain
+          required: true
+          schema:
+            type: string
+          description: The domain name.
+        - in: path
+          name: type
+          required: true
+          schema:
+            type: string
+          description: The record type.
+        - in: path
+          name: subdomain
+          required: false
+          schema:
+            type: string
+          description: The subdomain.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Authentication'
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+  /dns/retrieve/{domain}:
+    post:
+      summary: Retrieve all editable DNS records associated with a domain.
+      parameters:
+        - in: path
+          name: domain
+          required: true
+          schema:
+            type: string
+          description: The domain name.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Authentication'
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  records:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DNSRecord'
+  /dns/retrieve/{domain}/{id}:
+    post:
+      summary: Retrieve a specific DNS record by domain and ID.
+      parameters:
+        - in: path
+          name: domain
+          required: true
+          schema:
+            type: string
+          description: The domain name.
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The record ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Authentication'
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  records:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DNSRecord'
+  /dns/retrieveByNameType/{domain}/{type}/{subdomain}:
+    post:
+      summary: Retrieve DNS records by domain, subdomain, and type.
+      parameters:
+        - in: path
+          name: domain
+          required: true
+          schema:
+            type: string
+          description: The domain name.
+        - in: path
+          name: type
+          required: true
+          schema:
+            type: string
+          description: The record type.
+        - in: path
+          name: subdomain
+          required: false
+          schema:
+            type: string
+          description: The subdomain.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Authentication'
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  records:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DNSRecord'
+  /ssl/retrieve/{domain}:
+    post:
+      summary: Retrieve the SSL certificate bundle for the domain.
+      parameters:
+        - in: path
+          name: domain
+          required: true
+          schema:
+            type: string
+          description: The domain name.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Authentication'
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  certificatechain:
+                    type: string
+                    description: The complete certificate chain.
+                  privatekey:
+                    type: string
+                    description: The private key.
+                  publickey:
+                    type: string
+                    description: The public key.
