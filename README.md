@@ -1,5 +1,3 @@
-# Porkbun API - README
-
 ## Introduction
 
 The Porkbun API allows programmatic access to Porkbun's domain management services. With this API, you can manage domains, DNS records, SSL certificates, and more directly through HTTP requests.
